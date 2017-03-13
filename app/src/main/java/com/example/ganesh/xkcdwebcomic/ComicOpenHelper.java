@@ -34,9 +34,9 @@ import java.net.URL;
 public class ComicOpenHelper extends SQLiteOpenHelper {
 
     private static final int DATABASE_VERSION = 1;
-    private static final String DATABASE_NAME = "comic1.db";
-    private static final String DATABASE_PATH = "/data/data/com.example.ganesh.xkcdwebcomic/database";
-    private static final String TABLE_NAME = "comic1";
+    private static final String DATABASE_NAME = "comic8.db";
+    private static final String DATABASE_PATH = "/data/data/com.example.ganesh.xkcdwebcomic/databases/";
+    private static final String TABLE_NAME = "comic8";
     private static final String IMAGE_COLUMN = "image";
     private static final String ID_COLUMN = "_id";
     private static final String TITLE_COLUMN = "title";
@@ -60,6 +60,7 @@ public class ComicOpenHelper extends SQLiteOpenHelper {
         boolean doesDataBaseExist  = checkDataBase();
         if(!doesDataBaseExist){
             try{
+                System.out.println("DATABASE DOES NOT EXIST CREATE IT");
                 copyDataBase();
             }
             catch(IOException ioException){
@@ -79,7 +80,7 @@ public class ComicOpenHelper extends SQLiteOpenHelper {
         OutputStream outputStream = new FileOutputStream(DATABASE_PATH + DATABASE_NAME);
 
         // Copy to file
-        byte[] buffer = new byte[200000000];
+        byte[] buffer = new byte[60000000];
         int nRead;
         while((nRead = inputStream.read(buffer)) != -1){
             outputStream.write(buffer, 0, nRead);
@@ -108,11 +109,17 @@ public class ComicOpenHelper extends SQLiteOpenHelper {
                 FetchImageTask fetchImageTask = new FetchImageTask(imageURLString);
 
                 byte [] base64Result = fetchImageTask.execute().get();
+                // Compress image
+                Bitmap bitmap = BitmapFactory.decodeByteArray(base64Result, 0, base64Result.length);
+                ByteArrayOutputStream compressedStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 18, compressedStream);
+                byte [] compressedBytes = compressedStream.toByteArray();
+
                 // Get Data from api
                 ContentValues contentValues = new ContentValues();
                 contentValues.put(ID_COLUMN, comicNum);
                 contentValues.put(TITLE_COLUMN, fetchTitleTask.execute(comicNum).get());
-                contentValues.put(IMAGE_COLUMN, base64Result);
+                contentValues.put(IMAGE_COLUMN, compressedBytes);
                 // Insert into database
                 db.insert(TABLE_NAME, null, contentValues);
             }
@@ -207,7 +214,7 @@ public class ComicOpenHelper extends SQLiteOpenHelper {
         @Override
         protected String doInBackground(String... strings) {
             String comicNum = strings[0];
-            final String urlBase = "http://xkcd.com/" + comicNum + "/info.0.json";
+            final String urlBase = "https://xkcd.com/" + comicNum + "/info.0.json";
             HttpURLConnection httpURLConnection = null;
             StringBuffer buffer = null;
             BufferedReader reader = null;
@@ -266,7 +273,7 @@ public class ComicOpenHelper extends SQLiteOpenHelper {
         @Override
         protected String doInBackground(String... strings) {
             String comicNum = strings[0];
-            final String urlBase = "http://xkcd.com/" + comicNum + "/info.0.json";
+            final String urlBase = "https://xkcd.com/" + comicNum + "/info.0.json";
             HttpURLConnection httpURLConnection = null;
             StringBuffer buffer = null;
             BufferedReader reader = null;
@@ -324,7 +331,7 @@ public class ComicOpenHelper extends SQLiteOpenHelper {
 
         @Override
         protected Integer doInBackground(Void... voids) {
-            final String urlBase = "http://xkcd.com/info.0.json";
+            final String urlBase = "https://xkcd.com/info.0.json";
             HttpURLConnection httpURLConnection = null;
             StringBuffer buffer = null;
             BufferedReader reader = null;

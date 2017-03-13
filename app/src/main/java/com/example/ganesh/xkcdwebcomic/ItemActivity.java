@@ -34,7 +34,8 @@ public class ItemActivity extends AppCompatActivity {
         int id = item.getItemId();
         switch(id){
             case android.R.id.home:
-                NavUtils.navigateUpFromSameTask(this);
+                finish();
+                //NavUtils.navigateUpFromSameTask(this);
                 return true;
             default:
         }

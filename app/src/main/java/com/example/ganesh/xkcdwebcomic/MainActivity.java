@@ -39,7 +39,7 @@ import java.util.ArrayList;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String DATABASE_NAME = "comic1";
+    private static final String DATABASE_NAME = "comic8";
     private ComicOpenHelper sqLiteOpenHelper;
     private SQLiteDatabase sqLiteDatabase;
     private String query;
@@ -57,13 +57,14 @@ public class MainActivity extends AppCompatActivity {
         try {
             // Open Data base and query everything
             ComicOpenHelper sqLiteOpenHelper = new ComicOpenHelper(MainActivity.this);
+            // Try to create database
+            sqLiteOpenHelper.createDataBase();
             SQLiteDatabase sqLiteDatabase = sqLiteOpenHelper.getWritableDatabase();
             String query = "SELECT * FROM " + DATABASE_NAME; // + ";";
-            Cursor cursor = sqLiteDatabase.rawQuery(query + " WHERE _id<='20'" /*+ new Integer(lower).toString()*/, null);
+            Cursor cursor = sqLiteDatabase.rawQuery(query + " WHERE _id<=" + "'" + new Integer(lower).toString() + "'" , null);
             if(cursor == null){
                 System.out.println("Cursor is NULL");
             }
-
             // Put everything into an adapter and attach that to the view
             while(cursor.moveToNext()){
                 String body = cursor.getString(cursor.getColumnIndexOrThrow("_id"));
@@ -77,16 +78,16 @@ public class MainActivity extends AppCompatActivity {
 
             listView.setAdapter(adapter);
             listView.setClickable(true);
-            /*listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
+            listView.setOnItemClickListener(new AdapterView.OnItemClickListener(){
                 public void onItemClick(AdapterView<?> parent, View view, int position, long id){
                     Intent intent = new Intent(MainActivity.this, ItemActivity.class);
                     intent.putExtra("image", listOfImages.get(position));
                     startActivity(intent);
                 }
-            });*/
+            });
 
 
-            /*listView.setOnScrollListener(new AbsListView.OnScrollListener() {
+            listView.setOnScrollListener(new AbsListView.OnScrollListener() {
                 boolean loadingFlag = false;
                 @Override
                 public void onScrollStateChanged(AbsListView absListView, int i) {
@@ -95,18 +96,16 @@ public class MainActivity extends AppCompatActivity {
 
                 @Override
                 public void onScroll (AbsListView absListView, int first, int visible, int total) {
-                    switch (absListView.getId()){
-                        case R.id.label:
-                            final int lastItem = first + visible;
-                            if(lastItem == total && !loadingFlag){
-                                loadingFlag = true;
-                                loadingFlag = addNewItems();
-                           }
-                        default:
-                            System.out.println(first);
+                    final int lastItem = first + visible;
+                    System.out.println("lastItem" + lastItem);
+                    System.out.println("TOTAL" + total);
+                    if(lastItem == total  && total != 0 && !loadingFlag){
+                        loadingFlag = true;
+                        loadingFlag = addNewItems();
                     }
+
                 }
-            });*/
+            });
         }
         catch(Exception e){
 
@@ -115,8 +114,13 @@ public class MainActivity extends AppCompatActivity {
 
     // Return false and pass it to the loadingFlag
     public boolean addNewItems(){
+        System.out.println("ADD ITEMS");
+        sqLiteOpenHelper = new ComicOpenHelper(MainActivity.this);
+        sqLiteDatabase = sqLiteOpenHelper.getWritableDatabase();
+        query = "SELECT * FROM " + DATABASE_NAME;
         Cursor cursor = sqLiteDatabase.
-                rawQuery(query + " WHERE _id>=" + "'" + new Integer(lower).toString() + "' " + "AND _id<=" + "'" + new Integer(lower+20).toString() + "'", null);
+                rawQuery(query + " WHERE _id>" + "'" + new Integer(lower).toString() + "' " + "AND _id<=" + "'" + new Integer(lower+20).toString() + "'", null);
+        System.out.println("ADD ITEMS");
         lower += 20;
         while(cursor.moveToNext()){
             String body = cursor.getString(cursor.getColumnIndexOrThrow("_id"));
@@ -124,8 +128,7 @@ public class MainActivity extends AppCompatActivity {
             listOfIds.add(body);
             byte [] imageString = cursor.getBlob(cursor.getColumnIndexOrThrow("image"));
             listOfImages.add(imageString);
-            adapter.add(body);
-            System.out.println(body);
+            //adapter.add(body);
         }
         adapter.notifyDataSetChanged();
         return false;
